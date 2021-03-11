@@ -124,8 +124,8 @@ UM6845R Crtc
 	.RS     (crtcRs ),
 	.DI     (q      ),
 	.DO     (crtcQ  ),
-	.VSYNC  (vSync  ),
-	.HSYNC  (hSync  ),
+	.VSYNC  (VSync  ),
+	.HSYNC  (HSync  ),
 	.DE     (crtcDe ),
 	.FIELD  (       ),
 	.CURSOR (cursor ),
@@ -274,51 +274,116 @@ assign led = ~ear;
 localparam CONF_STR = {
 	"EG2000;;",
 	"T0,Reset;",
-	"O1,Scandoubler,Off,On;",
-	"O23,Scanlines,None,25%,50%,75%;",
-	"V,v1.0"
+	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"V,v1.1"
 };
 
 wire[31:0] status;
-wire[ 7:0] ps2Code;
-wire       ps2Strobe;
-wire       ps2Pressed;
 wire       scandoubler_disable;
 
-user_io #(.STRLEN(($size(CONF_STR)>>3))) userIo
-( 
+wire[ 7:0] ps2Code =ps2_key[7:0];
+wire       ps2Prsd = ps2_key[9];
+
+wire [10:0] ps2_key;
+
+wire ps2Strb = old_keystb ^ ps2_key[10];
+reg old_keystb = 0;
+
+always @(posedge clock) old_keystb <= ps2_key[10];
+
+//user_io #(.STRLEN(($size(CONF_STR)>>3))) userIo
+//( 
+//	.conf_str    (CONF_STR),
+//	.clk_sys     (clock   ),
+//	.SPI_CLK     (spiCk   ),
+//	.SPI_SS_IO   (cfgD0   ),
+//	.SPI_MISO    (spiDo   ),
+//	.SPI_MOSI    (spiDi   ),
+//	.status      (status  ),
+//	.key_code    (ps2Code ),
+//	.key_strobe  (ps2Strb ),
+//	.key_pressed (ps2Prsd ),
+//	.key_extended(        ),
+//	.scandoubler_disable(scandoubler_disable)
+//);
+//
+//mist_video mistVideo
+//(
+//	.clk_sys   ( clock     ),
+//	.SPI_SCK   ( spiCk     ),
+//	.SPI_DI    ( spiDi     ),
+//	.SPI_SS3   ( spiS3     ),
+//	.scanlines (status[3:2]),
+//	.ce_divider(1'b0       ),
+//	.scandoubler_disable(scandoubler_disable),
+//	.no_csync  (1'b0       ),
+//	.ypbpr     (1'b0       ),
+//	.rotate    (2'b00      ),
+//	.blend     (1'b0       ),
+//	.R         (rgbQ[17:12]),
+//	.G         (rgbQ[11: 6]),
+//	.B         (rgbQ[ 5: 0]),
+//	.HSync     (~hSync     ),
+//	.VSync     (~vSync     ),
+//	.VGA_R     (rgb[17:12] ),
+//	.VGA_G     (rgb[11: 6] ),
+//	.VGA_B     (rgb[ 5: 0] ),
+//	.VGA_VS    (sync[1]    ),
+//	.VGA_HS    (sync[0]    )
+//);
+
+mist_io #(.STRLEN(($size(CONF_STR)>>3))) mist_io
+(  
+	.ioctl_ce    (1),
 	.conf_str    (CONF_STR),
 	.clk_sys     (clock   ),
-	.SPI_CLK     (spiCk   ),
-	.SPI_SS_IO   (cfgD0   ),
-	.SPI_MISO    (spiDo   ),
-	.SPI_MOSI    (spiDi   ),
+	.SPI_SCK     (spiCk   ),
+	.CONF_DATA0  (cfgD0   ),
+	.SPI_SS2     (spiS2   ),
+	.SPI_DO    	 (spiDo   ),
+	.SPI_DI      (spiDi   ),
 	.status      (status  ),
-	.key_code    (ps2Code ),
-	.key_strobe  (ps2Strb ),
-	.key_pressed (ps2Prsd ),
-	.key_extended(        ),
-	.scandoubler_disable(scandoubler_disable)
+   .ps2_key     (ps2_key ),
+	.scandoubler_disable(scandoubler_disable),
+	.ypbpr       (ypbpr   ),
+
+	// unused
+	.ps2_kbd_clk(),
+	.ps2_kbd_data(),
+	.ps2_mouse_clk(),
+	.ps2_mouse_data(),
+	.joystick_analog_0(),
+	.joystick_analog_1()
 );
 
-mist_video mistVideo
+wire [1:0] scale = status[3:2];
+wire ce_pix = ce8M8p;
+
+
+video_mixer #(.LINE_LENGTH(512), .HALF_DEPTH(1)) video_mixer
 (
+	.*,
+	.ce_pix(ce_pix),
+	.ce_pix_actual(ce_pix),
+	.hq2x(scale == 1),
+	.scanlines(scandoubler_disable ? 2'b00 : {scale==3, scale==2}),
 	.clk_sys   ( clock     ),
 	.SPI_SCK   ( spiCk     ),
 	.SPI_DI    ( spiDi     ),
 	.SPI_SS3   ( spiS3     ),
-	.scanlines (status[3:2]),
-	.ce_divider(1'b0       ),
-	.scandoubler_disable(scandoubler_disable),
-	.no_csync  (1'b0       ),
-	.ypbpr     (1'b0       ),
-	.rotate    (2'b00      ),
-	.blend     (1'b0       ),
-	.R         (rgbQ[17:12]),
-	.G         (rgbQ[11: 6]),
-	.B         (rgbQ[ 5: 0]),
-	.HSync     (~hSync     ),
-	.VSync     (~vSync     ),
+   .mono      (0),
+	.ypbpr     (ypbpr      ),
+	.line_start(0),
+	.ypbpr_full(0),
+	.HSync     (~HSync),
+	.VSync     (~VSync),
+//	.R         (rgbQ[17:12]),
+//	.G         (rgbQ[11: 6]),
+//	.B         (rgbQ[ 5: 0]),
+	.R         (rgbQ[17:15]),
+	.G         (rgbQ[11: 9]),
+	.B         (rgbQ[ 5: 3]),
+
 	.VGA_R     (rgb[17:12] ),
 	.VGA_G     (rgb[11: 6] ),
 	.VGA_B     (rgb[ 5: 0] ),
