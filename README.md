@@ -7,12 +7,12 @@ This core has been designed from scratch.
 
 ## Background
 
-The Colour Genie was released in 1982.  It was an attractive machine, with a solid full-stroke keyboard and 
-16K BASIC in ROM. 
-As well as the 63-key typewriter keyboard and powerful BASIC, it featured the trusty Z-80, running at 2.2 MHz, 
-16k-32k of RAM, 3 channels of sound, 8 colours (4 for text), 40 columns x 24 rows for text (initially) and 
-160 x 102 pixels for graphics.Ports which included RS-232, Joysticks (2), 
-light pen, RGB and audio.  
+The Colour Genie was released in 1982.  It was an attractive machine, with a solid 
+full-stroke keyboard and 16K BASIC in ROM. 
+As well as the 63-key typewriter keyboard and powerful BASIC, it featured the 
+trusty Z-80, running at 2.2 MHz, 16k-32k of RAM, 3 channels of sound, 8 colours 
+(4 for text), 40 columns x 24 rows for text (initially) and 160 x 102 pixels 
+for graphics.Ports which included RS-232, Joysticks (2), light pen, RGB and audio.  
 
 ## Specifications:
 
@@ -21,8 +21,11 @@ Z80 running at 2.2 MHz
 Video Hardware
 
     Motorola 6845 CRTC
-    40×24 text (original ROMs) or 40×25 text (upgraded ROMs), 16 colours, 128 user defined characters
-    160×96 graphics (original ROMs) or 160×102 graphics (upgraded ROMs), 4 colours x up to 4 pages
+    40×24 text (original ROMs) or 40×25 text (upgraded ROMs), 16 colours, 
+    128 user defined characters
+    
+    160×96 graphics (original ROMs) or 160×102 graphics (upgraded ROMs), 
+    4 colours x up to 4 pages
 
 Sound Hardware
 
